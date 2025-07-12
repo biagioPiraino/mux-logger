@@ -37,6 +37,8 @@ func Logger(next http.Handler) http.Handler {
 			return
 		}
 
+		// remove default timestamp to respect csv format
+		log.SetFlags(0)
 		log.SetOutput(file)
 
 		// get request id from header passed from the client, inject one if not present
@@ -54,15 +56,14 @@ func Logger(next http.Handler) http.Handler {
 		// defer function used to log response status after request is served
 		defer logResponseStatus(requestId, writer)
 
-		log.Printf("%s,%s,%s,%s", requestId, r.RemoteAddr, r.Method, r.URL)
+		log.Printf("%s,%s,%s,%s,%s", now(), requestId, r.RemoteAddr, r.Method, r.URL)
 		next.ServeHTTP(writer, r)
 	})
 }
 
 func createLogFile() (*os.File, error) {
 	// Create a filename for today's logging
-	filename := strings.Join([]string{
-		time.Now().Format("2006-01-02") + "_api_requests", "csv"}, ".")
+	filename := strings.Join([]string{today() + "_api_requests", "csv"}, ".")
 
 	// Define the relative path to where to store the logs
 	logDir := filepath.Join("api", "logs")
@@ -91,5 +92,13 @@ func closeLogFile(file *os.File) {
 }
 
 func logResponseStatus(id string, w *WrappedResponseWriter) {
-	log.Printf("%s,%d", id, w.statusCode)
+	log.Printf("%s,%s,%d", now(), id, w.statusCode)
+}
+
+func today() string {
+	return time.Now().UTC().Format("2006-01-02")
+}
+
+func now() string {
+	return time.Now().UTC().Format(time.RFC3339)
 }
