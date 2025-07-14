@@ -7,8 +7,6 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
-
-	"github.com/google/uuid"
 )
 
 type WrappedResponseWriter struct {
@@ -41,12 +39,8 @@ func Logger(next http.Handler) http.Handler {
 		log.SetFlags(0)
 		log.SetOutput(file)
 
-		// get request id from header passed from the client, inject one if not present
+		// get request id from header passed from the client or injected by middleware
 		requestId := r.Header.Get("X-Request-ID")
-		if requestId == "" {
-			requestId = uuid.New().String()
-			r.Header.Add("X-Request-ID", requestId)
-		}
 
 		defer closeLogFile(file)
 
