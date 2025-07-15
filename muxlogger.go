@@ -9,10 +9,6 @@ import (
 	"time"
 )
 
-type contextKey string
-
-const requestIdKey = contextKey("requestId")
-
 type WrappedResponseWriter struct {
 	http.ResponseWriter
 	statusCode int
@@ -43,8 +39,8 @@ func Logger(next http.Handler) http.Handler {
 		log.SetFlags(0)
 		log.SetOutput(file)
 
-		// get request id from the request context
-		requestId := r.Context().Value(requestIdKey).(string)
+		// get request id from header passed from the client or injected by middleware
+		requestId := r.Header.Get("X-Request-ID")
 
 		defer closeLogFile(file)
 
